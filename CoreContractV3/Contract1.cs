@@ -9,6 +9,10 @@ namespace CoreContractV3
     {
         public static Object Main(string action, params object[] args)
         {
+            //TODO fix bug when ended ask wasnt start and got removed
+            //params 0710
+            //ret: 05
+
             if (Runtime.Trigger == TriggerType.Application)
             {
                 if (action == "name")
@@ -31,8 +35,7 @@ namespace CoreContractV3
                 }
                 if (action == "endtask")
                 {
-                    byte[] address = (byte[])args[0];
-                    return EndTask(address);
+                    return EndTask();
                 }
                 if (action == "gettask")
                 {
@@ -50,17 +53,18 @@ namespace CoreContractV3
         {
             var counter = Storage.Get(Storage.CurrentContext, "counter").AsBigInteger();
             var curr = Storage.Get(Storage.CurrentContext, "current").AsBigInteger();
-            BigInteger init_value = 0;
-            if (counter != 0 || curr != 0)
+            BigInteger init_value_curr = 1;
+            BigInteger init_value_counter = 0;
+            if (counter == 0 || curr == 0)
             {
-                Storage.Put(Storage.CurrentContext, "counter", init_value);
-                Storage.Put(Storage.CurrentContext, "current", init_value);
+                Storage.Put(Storage.CurrentContext, "counter", init_value_curr);
+                Storage.Put(Storage.CurrentContext, "current", init_value_counter);
                 return true;
             }
             return false;
         }
 
-        private static object EndTask(byte[] address)
+        private static object EndTask()
         {
             IncrementCurrCounter();
             return true;
@@ -74,10 +78,10 @@ namespace CoreContractV3
 
         private static object RegisterTask(byte[] address, byte[] ip)
         {
-            var counter = GetCounter().ToByteArray();
-            Storage.Put(Storage.CurrentContext, counter, ip);
-            Storage.Put(Storage.CurrentContext, ip, address);
             IncrementCounter();
+            var counter = GetCounter();  
+            Storage.Put(Storage.CurrentContext, counter.ToByteArray(), ip);
+            Storage.Put(Storage.CurrentContext, counter.ToByteArray(), address);
             return true;
         }
 
